@@ -129,9 +129,6 @@ export const useMonitorStore = create<MonitorState>()(
       partialize: (state) => ({ pairs: state.pairs, settings: state.settings }),
       onRehydrateStorage: () => {
         return (state) => {
-          // Флаг устанавливается только после того, как pairs и settings загружены
-          state?.setHasHydrated(true);
-
           // Вызываем инициализацию пар (если она нужна для специфической логики)
           state?.initializePairsFromStorage();
         };

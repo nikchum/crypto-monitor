@@ -22,7 +22,7 @@ export function NotificationSettingsForm() {
           type="number"
           step="0.1"
           value={settings.priceLimit}
-          onChange={(e) => updateSettings({ priceLimit: e.target.value })}
+          onChange={(e) => updateSettings({ priceLimit: Number(e.target.value) })}
           className="w-full max-w-[80px]"
           placeholder=""
         />
