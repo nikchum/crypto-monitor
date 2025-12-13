@@ -7,7 +7,7 @@ import { ExchangeName } from "@/lib/api"; // Импортируем типы
 const EXTERNAL_PRICE_ENDPOINTS: Record<ExchangeName, (ticker: string) => string> = {
   Binance: (ticker) => `https://fapi.binance.com/fapi/v1/ticker/price?symbol=${ticker}`,
   Bybit: (ticker) => `https://api.bybit.com/v5/market/tickers?category=linear&symbol=${ticker}`,
-  Mexc: (ticker) => `https://api.mexc.com/api/v3/ticker/price?symbol=${ticker}`,
+  Mexc: (ticker) => `https://contract.mexc.com/api/v1/contract/ticker?symbol=${ticker}`,
   BingX: (ticker) => `https://open-api.bingx.com/openApi/swap/v2/quote/price?symbol=${ticker}`,
   Gate: (ticker) => `https://api.gateio.ws/api/v4/futures/usdt/contracts/${ticker}`,
 };

@@ -25,8 +25,10 @@ export async function fetchPrice(exchange: ExchangeName, ticker: string): Promis
     // Логика обработки данных остается здесь (на клиенте)
     switch (exchange) {
       case "Binance":
+        price = response.data?.price;
+        break;
       case "Mexc":
-        price = response.data.price;
+        price = response.data?.data?.lastPrice;
         break;
       case "Bybit":
         price = response.data.result.list?.[0]?.lastPrice;
@@ -76,7 +78,7 @@ export async function fetchAllTickers(exchange: ExchangeName): Promise<string[]>
           .filter((s: any) => s.symbol.endsWith("USDT"))
           .map((s: any) => s.symbol);
       case "Mexc":
-        return response.data?.data?.filter((s: any) => s.endsWith("USDT"));
+        return response.data?.data?.filter((s: any) => s.symbol.endsWith("USDT")).map((s: any) => s.symbol);
       case "BingX":
         return response.data.data
           .filter((s: any) => s.status === 1 && s.symbol.endsWith("USDT"))

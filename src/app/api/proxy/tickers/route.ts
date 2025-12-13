@@ -7,7 +7,7 @@ import { ExchangeName } from "@/lib/api"; // Импортируем типы
 const EXTERNAL_TICKER_ENDPOINTS: Record<ExchangeName, string> = {
   Binance: "https://fapi.binance.com/fapi/v1/exchangeInfo",
   Bybit: "https://api.bybit.com/v5/market/tickers?category=linear&quoteCoin=USDT",
-  Mexc: "https://api.mexc.com/api/v3/defaultSymbols",
+  Mexc: "https://contract.mexc.com/api/v1/contract/detail",
   BingX: "https://open-api.bingx.com/openApi/swap/v2/quote/contracts",
   Gate: "https://api.gateio.ws/api/v4/futures/usdt/contracts",
 };
