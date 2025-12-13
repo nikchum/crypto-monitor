@@ -8,44 +8,44 @@ import { Button } from "@/components/ui/button";
 import { ExchangeName, EXCHANGES } from "@/lib/api"; // DUMMY_TICKERS удалены
 import { TickerPair, useMonitorStore } from "@/store/monitorStore";
 import { X } from "lucide-react";
-import useDebounce from "@/hooks/useDebounce";
+// import useDebounce from "@/hooks/useDebounce";
 
 interface TickerPairFormProps {
   pair: TickerPair;
 }
 
 const EXCHANGES_LIST: ExchangeName[] = Object.keys(EXCHANGES) as ExchangeName[];
-const DEBOUNCE_DELAY = 500;
+// const DEBOUNCE_DELAY = 500;
 
 export function TickerPairForm({ pair }: TickerPairFormProps) {
   const updatePair = useMonitorStore((state) => state.updatePair);
   const removePair = useMonitorStore((state) => state.removePair);
   const tickerCache = useMonitorStore((state) => state.tickerCache);
 
-  const [localTicker1, setLocalTicker1] = useState(pair.ticker1);
-  const [localTicker2, setLocalTicker2] = useState(pair.ticker2);
+  //   const [localTicker1, setLocalTicker1] = useState(pair.ticker1);
+  //   const [localTicker2, setLocalTicker2] = useState(pair.ticker2);
 
-  const debouncedTicker1 = useDebounce(localTicker1, DEBOUNCE_DELAY);
-  const debouncedTicker2 = useDebounce(localTicker2, DEBOUNCE_DELAY);
+  //   const debouncedTicker1 = useDebounce(localTicker1, DEBOUNCE_DELAY);
+  //   const debouncedTicker2 = useDebounce(localTicker2, DEBOUNCE_DELAY);
 
-  // Эффект для синхронизации Debounced значений с Zustand
-  useEffect(() => {
-    if (debouncedTicker1 !== pair.ticker1) {
-      updatePair(pair.id, "ticker1", debouncedTicker1.toUpperCase());
-    }
-  }, [debouncedTicker1, pair.id, pair.ticker1, updatePair]);
+  //   // Эффект для синхронизации Debounced значений с Zustand
+  //   useEffect(() => {
+  //     if (debouncedTicker1 !== pair.ticker1) {
+  //       updatePair(pair.id, "ticker1", debouncedTicker1.toUpperCase());
+  //     }
+  //   }, [debouncedTicker1, pair.id, pair.ticker1, updatePair]);
 
-  useEffect(() => {
-    if (debouncedTicker2 !== pair.ticker2) {
-      updatePair(pair.id, "ticker2", debouncedTicker2.toUpperCase());
-    }
-  }, [debouncedTicker2, pair.id, pair.ticker2, updatePair]);
+  //   useEffect(() => {
+  //     if (debouncedTicker2 !== pair.ticker2) {
+  //       updatePair(pair.id, "ticker2", debouncedTicker2.toUpperCase());
+  //     }
+  //   }, [debouncedTicker2, pair.id, pair.ticker2, updatePair]);
 
-  // Синхронизация при загрузке или изменении пары — избегаем лишних setState
-  useEffect(() => {
-    setLocalTicker1((prev) => (prev !== pair.ticker1 ? pair.ticker1 : prev));
-    setLocalTicker2((prev) => (prev !== pair.ticker2 ? pair.ticker2 : prev));
-  }, [pair.ticker1, pair.ticker2]);
+  //   // Синхронизация при загрузке или изменении пары — избегаем лишних setState
+  //   useEffect(() => {
+  //     setLocalTicker1((prev) => (prev !== pair.ticker1 ? pair.ticker1 : prev));
+  //     setLocalTicker2((prev) => (prev !== pair.ticker2 ? pair.ticker2 : prev));
+  //   }, [pair.ticker1, pair.ticker2]);
 
   const handleUpdate = useCallback(
     (field: keyof TickerPair, value: string) => {
@@ -72,7 +72,13 @@ export function TickerPairForm({ pair }: TickerPairFormProps) {
         {/* Пара 1 */}
         <div className="space-y-2">
           <h4 className="font-semibold text-sm">Биржа 1</h4>
-          <Select value={pair.exchange1} onValueChange={(v) => handleUpdate("exchange1", v)}>
+          <Select
+            value={pair.exchange1}
+            onValueChange={(v) => {
+              handleUpdate("exchange1", v);
+              updatePair(pair.id, "ticker1", "");
+            }}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Выберите биржу" />
             </SelectTrigger>
@@ -88,8 +94,8 @@ export function TickerPairForm({ pair }: TickerPairFormProps) {
         <div className="space-y-2">
           <h4 className="font-semibold text-sm">Тикер 1 ({tickers1.length > 0 ? tickers1.length : "0"})</h4>
           <Input
-            value={localTicker1}
-            onChange={(e) => setLocalTicker1(e.target.value.toUpperCase())}
+            value={pair.ticker1}
+            onChange={(e) => updatePair(pair.id, "ticker1", e.target.value.toUpperCase())}
             placeholder="Введите тикер (e.g., BTCUSDT)"
             list={`tickers-${pair.id}-1`}
           />
@@ -103,7 +109,13 @@ export function TickerPairForm({ pair }: TickerPairFormProps) {
         {/* Пара 2 */}
         <div className="space-y-2">
           <h4 className="font-semibold text-sm">Биржа 2</h4>
-          <Select value={pair.exchange2} onValueChange={(v) => handleUpdate("exchange2", v)}>
+          <Select
+            value={pair.exchange2}
+            onValueChange={(v) => {
+              handleUpdate("exchange2", v);
+              updatePair(pair.id, "ticker2", "");
+            }}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Выберите биржу" />
             </SelectTrigger>
@@ -119,8 +131,8 @@ export function TickerPairForm({ pair }: TickerPairFormProps) {
         <div className="space-y-2">
           <h4 className="font-semibold text-sm">Тикер 2 ({tickers2.length > 0 ? tickers2.length : "0"})</h4>
           <Input
-            value={localTicker2}
-            onChange={(e) => setLocalTicker2(e.target.value.toUpperCase())}
+            value={pair.ticker2}
+            onChange={(e) => updatePair(pair.id, "ticker2", e.target.value.toUpperCase())}
             placeholder="Введите тикер (e.g., BTCUSDT)"
             list={`tickers-${pair.id}-2`}
           />

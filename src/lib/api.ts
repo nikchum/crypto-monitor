@@ -1,30 +1,28 @@
-// lib/api.ts
+// lib/api.ts (Обновленная версия)
 import axios from "axios";
 
-// ---------------------- Эндпоинты для ЦЕНЫ (fetchPrice) ----------------------
+// ---------------------- ТИПЫ (НЕ МЕНЯЕМ) ----------------------
+// Типы нужны, чтобы использовать их в серверных Route Handlers
 export const EXCHANGES = {
-  Binance: (ticker: string) => `https://fapi.binance.com/fapi/v1/ticker/price?symbol=${ticker.toUpperCase()}`,
-  Bybit: (ticker: string) =>
-    `https://api.bybit.com/v5/market/tickers?category=linear&symbol=${ticker.toUpperCase()}`,
-  Mexc: (ticker: string) => `https://api.mexc.com/api/v3/ticker/price?symbol=${ticker.toUpperCase()}`,
-  BingX: (ticker: string) =>
-    `https://open-api.bingx.com/openApi/swap/v2/quote/price?symbol=${ticker.toUpperCase()}`,
-  Gate: (ticker: string) =>
-    `https://api.gateio.ws/api/v4/futures/usdt/tickers?currency_pair=${ticker.toUpperCase()}`,
+  Binance: (ticker: string) => ticker, // Теперь не используем URL, просто возвращаем тикер
+  Bybit: (ticker: string) => ticker,
+  Mexc: (ticker: string) => ticker,
+  BingX: (ticker: string) => ticker,
+  Gate: (ticker: string) => ticker,
 };
-
 export type ExchangeName = keyof typeof EXCHANGES;
 
+// ---------------------- ФУНКЦИЯ ДЛЯ ЦЕНЫ (fetchPrice) ----------------------
 export async function fetchPrice(exchange: ExchangeName, ticker: string): Promise<number | null> {
-  const urlGetter = EXCHANGES[exchange];
-  if (!urlGetter) return null;
-
-  const url = urlGetter(ticker);
+  // НОВЫЙ URL: Запрос идет на ваш локальный API Route
+  const url = `/api/proxy/price?exchange=${exchange}&ticker=${ticker}`;
 
   try {
-    const response = await axios.get(url, { timeout: 5000 });
+    // В запросе отправляем только exchange и ticker, вся логика на бэкенде
+    const response = await axios.get(url, { timeout: 10000 });
     let price: string | number | undefined;
 
+    // Логика обработки данных остается здесь (на клиенте)
     switch (exchange) {
       case "Binance":
       case "Mexc":
@@ -37,7 +35,7 @@ export async function fetchPrice(exchange: ExchangeName, ticker: string): Promis
         price = response.data.data?.price;
         break;
       case "Gate":
-        price = response.data?.[0]?.last;
+        price = response.data?.last_price;
         break;
       default:
         return null;
@@ -49,29 +47,23 @@ export async function fetchPrice(exchange: ExchangeName, ticker: string): Promis
     return null;
   } catch (error) {
     console.error(
-      `Ошибка при получении ${ticker} с ${exchange}:`,
+      `Ошибка при получении ${ticker} с ${exchange} (Через прокси):`,
       error instanceof Error ? error.message : "Unknown Error"
     );
     return null;
   }
 }
 
-// ---------------------- Эндпоинты для СПИСКА ТИКЕРОВ (fetchAllTickers) ----------------------
-export const TICKET_LIST_ENDPOINTS: Record<ExchangeName, string> = {
-  Binance: "https://fapi.binance.com/fapi/v1/exchangeInfo",
-  Bybit: "https://api.bybit.com/v5/market/tickers?category=linear&quoteCoin=USDT",
-  Mexc: "https://api.mexc.com/api/v3/defaultSymbols",
-  BingX: "https://open-api.bingx.com/openApi/swap/v2/quote/contracts",
-  Gate: "https://api.gateio.ws/api/v4/futures/usdt/contracts",
-};
-
+// ---------------------- ФУНКЦИЯ ДЛЯ СПИСКА ТИКЕРОВ (fetchAllTickers) ----------------------
 export async function fetchAllTickers(exchange: ExchangeName): Promise<string[]> {
-  const url = TICKET_LIST_ENDPOINTS[exchange];
-  if (!url) return [];
+  // НОВЫЙ URL: Запрос идет на ваш локальный API Route
+  const url = `/api/proxy/tickers?exchange=${exchange}`;
 
   try {
+    // В запросе отправляем только exchange
     const response = await axios.get(url, { timeout: 10000 });
 
+    // Логика обработки данных остается здесь (на клиенте)
     switch (exchange) {
       case "Binance":
         return response.data.symbols
@@ -84,7 +76,7 @@ export async function fetchAllTickers(exchange: ExchangeName): Promise<string[]>
           .filter((s: any) => s.symbol.endsWith("USDT"))
           .map((s: any) => s.symbol);
       case "Mexc":
-        return response.data.filter((s: any) => s.endsWith("USDT")).map((s: any) => s);
+        return response.data?.data?.filter((s: any) => s.endsWith("USDT"));
       case "BingX":
         return response.data.data
           .filter((s: any) => s.status === 1 && s.symbol.endsWith("USDT"))
@@ -98,7 +90,7 @@ export async function fetchAllTickers(exchange: ExchangeName): Promise<string[]>
     }
   } catch (error) {
     console.error(
-      `Ошибка при получении списка тикеров для ${exchange}:`,
+      `Ошибка при получении списка тикеров для ${exchange} (Через прокси):`,
       error instanceof Error ? error.message : "Unknown Error"
     );
     return [];
