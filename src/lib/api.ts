@@ -1,8 +1,9 @@
 // lib/api.ts
 import axios from "axios";
 
+// ---------------------- Эндпоинты для ЦЕНЫ (fetchPrice) ----------------------
 export const EXCHANGES = {
-  Binance: (ticker: string) => `https://api.binance.com/api/v3/ticker/price?symbol=${ticker.toUpperCase()}`,
+  Binance: (ticker: string) => `https://fapi.binance.com/fapi/v1/ticker/price?symbol=${ticker.toUpperCase()}`,
   Bybit: (ticker: string) =>
     `https://api.bybit.com/v5/market/tickers?category=linear&symbol=${ticker.toUpperCase()}`,
   Mexc: (ticker: string) => `https://api.mexc.com/api/v3/ticker/price?symbol=${ticker.toUpperCase()}`,
@@ -14,7 +15,6 @@ export const EXCHANGES = {
 
 export type ExchangeName = keyof typeof EXCHANGES;
 
-// Получение цены с биржи
 export async function fetchPrice(exchange: ExchangeName, ticker: string): Promise<number | null> {
   const urlGetter = EXCHANGES[exchange];
   if (!urlGetter) return null;
@@ -25,20 +25,19 @@ export async function fetchPrice(exchange: ExchangeName, ticker: string): Promis
     const response = await axios.get(url, { timeout: 5000 });
     let price: string | number | undefined;
 
-    // Парсинг ответа для каждой биржи
     switch (exchange) {
       case "Binance":
       case "Mexc":
         price = response.data.price;
         break;
       case "Bybit":
-        price = response.data.result.list[0]?.lastPrice;
+        price = response.data.result.list?.[0]?.lastPrice;
         break;
       case "BingX":
         price = response.data.data?.price;
         break;
       case "Gate":
-        price = response.data.data[0]?.last;
+        price = response.data?.[0]?.last;
         break;
       default:
         return null;
@@ -57,48 +56,43 @@ export async function fetchPrice(exchange: ExchangeName, ticker: string): Promis
   }
 }
 
-// Новые эндпоинты для получения ВСЕХ тикеров фьючерсов
+// ---------------------- Эндпоинты для СПИСКА ТИКЕРОВ (fetchAllTickers) ----------------------
 export const TICKET_LIST_ENDPOINTS: Record<ExchangeName, string> = {
-  Binance: "https://fapi.binance.com/fapi/v1/exchangeInfo", // Binance Futures
-  Bybit: "https://api.bybit.com/v5/market/tickers?category=linear", // Bybit Linear Futures
-  Mexc: "https://api.mexc.com/api/v3/defaultSymbols", // MEXC Futures
-  BingX: "https://open-api.bingx.com/openApi/swap/v2/market/allSymbols", // BingX Futures
-  Gate: "https://api.gateio.ws/api/v4/futures/usdt/contracts", // Gate USDT Futures
+  Binance: "https://fapi.binance.com/fapi/v1/exchangeInfo",
+  Bybit: "https://api.bybit.com/v5/market/tickers?category=linear&quoteCoin=USDT",
+  Mexc: "https://api.mexc.com/api/v3/defaultSymbols",
+  BingX: "https://open-api.bingx.com/openApi/swap/v2/quote/contracts",
+  Gate: "https://api.gateio.ws/api/v4/futures/usdt/contracts",
 };
 
-// Функция для получения и парсинга списка тикеров
 export async function fetchAllTickers(exchange: ExchangeName): Promise<string[]> {
   const url = TICKET_LIST_ENDPOINTS[exchange];
   if (!url) return [];
 
   try {
-    const response = await axios.get(url, { timeout: 10000 }); // Увеличим таймаут
+    const response = await axios.get(url, { timeout: 10000 });
 
     switch (exchange) {
       case "Binance":
-        // Фильтруем только активные USDT фьючерсы
         return response.data.symbols
           .filter(
             (s: any) => s.contractType === "PERPETUAL" && s.status === "TRADING" && s.symbol.endsWith("USDT")
           )
           .map((s: any) => s.symbol);
-
       case "Bybit":
-        // Bybit возвращает сразу тикеры в list
-        return response.data.result.list.map((s: any) => s.symbol);
-
+        return response.data.result.list
+          .filter((s: any) => s.symbol.endsWith("USDT"))
+          .map((s: any) => s.symbol);
       case "Mexc":
-        // MEXC
-        return response.data.map((s: any) => s.symbol);
-
+        return response.data.filter((s: any) => s.endsWith("USDT")).map((s: any) => s);
       case "BingX":
-        // BingX
-        return response.data.data.filter((s: any) => s.status === "TRADING").map((s: any) => s.symbol);
-
+        return response.data.data
+          .filter((s: any) => s.status === 1 && s.symbol.endsWith("USDT"))
+          .map((s: any) => s.symbol);
       case "Gate":
-        // Gate.io
-        return response.data.map((s: any) => s.name);
-
+        return response.data
+          .filter((s: any) => s.status === "trading" && s.name.endsWith("USDT"))
+          .map((s: any) => s.name);
       default:
         return [];
     }
@@ -110,6 +104,3 @@ export async function fetchAllTickers(exchange: ExchangeName): Promise<string[]>
     return [];
   }
 }
-
-// Заглушка для получения списка тикеров (поскольку нет простого API для всех фьючей)
-export const DUMMY_TICKERS = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "LINKUSDT"];

@@ -10,11 +10,9 @@ const useTickerLoader = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Собираем уникальные биржи, которые нужно загрузить
     const exchangesToLoad = new Set<ExchangeName>();
 
     pairs.forEach((pair) => {
-      // Проверяем, есть ли биржа в кэше
       if (pair.exchange1 && !tickerCache[pair.exchange1]) {
         exchangesToLoad.add(pair.exchange1 as ExchangeName);
       }
@@ -47,8 +45,6 @@ const useTickerLoader = () => {
 
       loadTickers();
     }
-
-    // Этот эффект запускается при изменении пар или кэша
   }, [pairs, tickerCache, setTickerCache, isLoading]);
 
   return { isLoadingTickers: isLoading };

@@ -3,8 +3,9 @@
 
 import { useMonitorStore } from "@/store/monitorStore";
 import { TickerPairForm } from "@/components/ticker-pair-form";
-import useTickerLoader from "@/hooks/useTickerLoader";
+import { NotificationSettingsForm } from "@/components/notification-settings";
 import usePriceMonitor from "@/hooks/usePriceMonitor";
+import useTickerLoader from "@/hooks/useTickerLoader";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -22,7 +23,6 @@ import { useEffect } from "react";
 const HydrateWrapper = ({ children }: { children: React.ReactNode }) => {
   const initializePairsFromStorage = useMonitorStore((state) => state.initializePairsFromStorage);
 
-  // Эффект для гидрации Zustand, чтобы получить данные из localStorage
   useEffect(() => {
     useMonitorStore.persist.rehydrate();
     initializePairsFromStorage();
@@ -34,10 +34,7 @@ const HydrateWrapper = ({ children }: { children: React.ReactNode }) => {
 export default function Home() {
   const { pairs, data, addPair } = useMonitorStore();
 
-  // Запускаем мониторинг цен
   usePriceMonitor();
-
-  // Запускаем загрузчик тикеров
   const { isLoadingTickers } = useTickerLoader();
 
   return (
@@ -45,15 +42,19 @@ export default function Home() {
       <main className="container mx-auto p-4 space-y-8">
         <h1 className="text-3xl font-bold">💰 Crypto Arbitrage Monitor</h1>
 
+        {/* 1. Общие настройки уведомлений */}
+        <NotificationSettingsForm />
+
         {isLoadingTickers && (
-          <div className="flex items-center text-blue-500 font-medium">
+          <div className="flex items-center text-blue-500 font-medium p-4 border rounded-md">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Загрузка списков тикеров... (может занять 10-20 секунд)
+            Загрузка списков тикеров... (может занять некоторое время)
           </div>
         )}
 
-        {/* Формы для ввода данных */}
+        {/* 2. Формы для ввода данных */}
         <div className="space-y-6">
+          <h2 className="text-2xl font-semibold">👀 Отслеживаемые пары</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {pairs.map((pair) => (
               <TickerPairForm key={pair.id} pair={pair} />
@@ -61,11 +62,11 @@ export default function Home() {
           </div>
 
           <Button onClick={addPair} className="w-full md:w-auto" disabled={isLoadingTickers}>
-            + Добавить новую пару для отслеживания
+            + Добавить пару для отслеживания
           </Button>
         </div>
 
-        {/* Таблица с результатами */}
+        {/* 3. Таблица с результатами */}
         <div className="mt-8">
           <h2 className="text-2xl font-semibold mb-4">📊 Результаты мониторинга (Обновление каждые 10с)</h2>
           <Table>

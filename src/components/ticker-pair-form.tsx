@@ -1,41 +1,35 @@
 // components/ticker-pair-form.tsx
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ExchangeName, EXCHANGES } from "@/lib/api";
+import { ExchangeName, EXCHANGES } from "@/lib/api"; // DUMMY_TICKERS удалены
 import { TickerPair, useMonitorStore } from "@/store/monitorStore";
 import { X } from "lucide-react";
 import useDebounce from "@/hooks/useDebounce";
-import { useEffect, useState } from "react";
-
-const DEBOUNCE_DELAY = 500; // Задержка 500 мс
 
 interface TickerPairFormProps {
   pair: TickerPair;
 }
 
 const EXCHANGES_LIST: ExchangeName[] = Object.keys(EXCHANGES) as ExchangeName[];
+const DEBOUNCE_DELAY = 500;
 
 export function TickerPairForm({ pair }: TickerPairFormProps) {
-  const { updatePair, removePair, tickerCache } = useMonitorStore(); // Добавляем tickerCache
+  const updatePair = useMonitorStore((state) => state.updatePair);
+  const removePair = useMonitorStore((state) => state.removePair);
+  const tickerCache = useMonitorStore((state) => state.tickerCache);
 
-  const handleUpdate = (field: keyof TickerPair, value: string) => {
-    updatePair(pair.id, field, value);
-  };
-
-  // Локальные состояния для ввода, чтобы избежать частого обновления Zustand
   const [localTicker1, setLocalTicker1] = useState(pair.ticker1);
   const [localTicker2, setLocalTicker2] = useState(pair.ticker2);
 
-  // Debounce для локальных значений
   const debouncedTicker1 = useDebounce(localTicker1, DEBOUNCE_DELAY);
   const debouncedTicker2 = useDebounce(localTicker2, DEBOUNCE_DELAY);
 
-  // --- Эффект для синхронизации Debounced значений с Zustand ---
+  // Эффект для синхронизации Debounced значений с Zustand
   useEffect(() => {
-    // Обновляем Zustand только если отложенное значение изменилось и отличается от текущего в Zustand
     if (debouncedTicker1 !== pair.ticker1) {
       updatePair(pair.id, "ticker1", debouncedTicker1.toUpperCase());
     }
@@ -47,15 +41,20 @@ export function TickerPairForm({ pair }: TickerPairFormProps) {
     }
   }, [debouncedTicker2, pair.id, pair.ticker2, updatePair]);
 
-  // Синхронизация при загрузке из localStorage или удалении/добавлении пары
+  // Синхронизация при загрузке или изменении пары — избегаем лишних setState
   useEffect(() => {
-    setLocalTicker1(pair.ticker1);
-    setLocalTicker2(pair.ticker2);
+    setLocalTicker1((prev) => (prev !== pair.ticker1 ? pair.ticker1 : prev));
+    setLocalTicker2((prev) => (prev !== pair.ticker2 ? pair.ticker2 : prev));
   }, [pair.ticker1, pair.ticker2]);
 
-  // Тикеры для первой биржи
+  const handleUpdate = useCallback(
+    (field: keyof TickerPair, value: string) => {
+      updatePair(pair.id, field, value);
+    },
+    [updatePair, pair.id]
+  ); // Зависит от стабильной updatePair и ID пары
+
   const tickers1 = tickerCache[pair.exchange1] || [];
-  // Тикеры для второй биржи
   const tickers2 = tickerCache[pair.exchange2] || [];
 
   return (
@@ -86,19 +85,14 @@ export function TickerPairForm({ pair }: TickerPairFormProps) {
             </SelectContent>
           </Select>
         </div>
-
         <div className="space-y-2">
           <h4 className="font-semibold text-sm">Тикер 1 ({tickers1.length > 0 ? tickers1.length : "0"})</h4>
-          {/* Инпут + datalist */}
           <Input
-            // Используем ЛОКАЛЬНОЕ состояние для ввода
             value={localTicker1}
-            // Обновляем ЛОКАЛЬНОЕ состояние при каждом вводе
             onChange={(e) => setLocalTicker1(e.target.value.toUpperCase())}
             placeholder="Введите тикер (e.g., BTCUSDT)"
             list={`tickers-${pair.id}-1`}
           />
-          {/* Datalist теперь заполняется из кэша */}
           <datalist id={`tickers-${pair.id}-1`}>
             {tickers1.map((t) => (
               <option key={t} value={t} />
@@ -122,13 +116,10 @@ export function TickerPairForm({ pair }: TickerPairFormProps) {
             </SelectContent>
           </Select>
         </div>
-
         <div className="space-y-2">
           <h4 className="font-semibold text-sm">Тикер 2 ({tickers2.length > 0 ? tickers2.length : "0"})</h4>
           <Input
-            // Используем ЛОКАЛЬНОЕ состояние для ввода
             value={localTicker2}
-            // Обновляем ЛОКАЛЬНОЕ состояние при каждом вводе
             onChange={(e) => setLocalTicker2(e.target.value.toUpperCase())}
             placeholder="Введите тикер (e.g., BTCUSDT)"
             list={`tickers-${pair.id}-2`}
