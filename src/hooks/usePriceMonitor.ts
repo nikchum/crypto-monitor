@@ -79,7 +79,7 @@ const usePriceMonitor = () => {
     monitorAllPairs();
 
     // Запускаем новый интервал при изменении пар, настроек или функции
-    const intervalId = setInterval(monitorAllPairs, 10000);
+    const intervalId = setInterval(monitorAllPairs, 5000);
 
     return () => clearInterval(intervalId);
     // Зависимости useEffect:

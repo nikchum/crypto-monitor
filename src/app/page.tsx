@@ -68,7 +68,7 @@ export default function Home() {
 
         {/* 3. Таблица с результатами */}
         <div className="mt-8">
-          <h2 className="text-2xl font-semibold mb-4">📊 Результаты мониторинга (Обновление каждые 10с)</h2>
+          <h2 className="text-2xl font-semibold mb-4">📊 Результаты мониторинга (Обновление каждые 5с)</h2>
           <Table>
             <TableCaption>Разница в ценах между выбранными биржами и тикерами.</TableCaption>
             <TableHeader>
