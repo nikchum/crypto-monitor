@@ -65,7 +65,7 @@ export async function fetchAllTickers(exchange: ExchangeName): Promise<string[]>
     // В запросе отправляем только exchange
     const response = await axios.get(url, { timeout: 10000 });
 
-    // Логика обработки данных остается здесь (на клиенте
+    // Логика обработки данных остается здесь (на клиенте)
     switch (exchange) {
       case "Binance":
         return response.data.symbols
@@ -78,7 +78,9 @@ export async function fetchAllTickers(exchange: ExchangeName): Promise<string[]>
       case "Mexc":
         return response.data?.data?.filter((s: any) => s.symbol.endsWith("USDT")).map((s: any) => s.symbol);
       case "BingX":
-        return response.data.data.filter((s: any) => s.symbol.endsWith("USDT")).map((s: any) => s.symbol);
+        return response.data.data
+          .filter((s: any) => s.status === 1 && s.symbol.endsWith("USDT"))
+          .map((s: any) => s.symbol);
       case "Gate":
         return response.data.filter((s: any) => s.name.endsWith("USDT")).map((s: any) => s.name);
       default:
