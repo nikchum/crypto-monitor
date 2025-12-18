@@ -69,9 +69,7 @@ export async function fetchAllTickers(exchange: ExchangeName): Promise<string[]>
     switch (exchange) {
       case "Binance":
         return response.data.symbols
-          .filter(
-            (s: any) => s.contractType === "PERPETUAL" && s.status === "TRADING" && s.symbol.endsWith("USDT")
-          )
+          .filter((s: any) => s.contractType === "PERPETUAL" && s.symbol.endsWith("USDT"))
           .map((s: any) => s.symbol);
       case "Bybit":
         return response.data.result.list
@@ -80,13 +78,9 @@ export async function fetchAllTickers(exchange: ExchangeName): Promise<string[]>
       case "Mexc":
         return response.data?.data?.filter((s: any) => s.symbol.endsWith("USDT")).map((s: any) => s.symbol);
       case "BingX":
-        return response.data.data
-          .filter((s: any) => s.status === 1 && s.symbol.endsWith("USDT"))
-          .map((s: any) => s.symbol);
+        return response.data.data.filter((s: any) => s.symbol.endsWith("USDT")).map((s: any) => s.symbol);
       case "Gate":
-        return response.data
-          .filter((s: any) => s.status === "trading" && s.name.endsWith("USDT"))
-          .map((s: any) => s.name);
+        return response.data.filter((s: any) => s.name.endsWith("USDT")).map((s: any) => s.name);
       default:
         return [];
     }
