@@ -65,7 +65,7 @@ export async function fetchAllTickers(exchange: ExchangeName): Promise<string[]>
     // В запросе отправляем только exchange
     const response = await axios.get(url, { timeout: 10000 });
 
-    // Логика обработки данных остается здесь (на клиенте)
+    // Логика обработки данных остается здесь (на клиенте
     switch (exchange) {
       case "Binance":
         return response.data.symbols
